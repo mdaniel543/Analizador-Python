@@ -3,7 +3,8 @@ from tkinter import *
 from tkinter import ttk
 from tkinter.filedialog import askopenfilename
 from tkinter import messagebox
-
+import re
+import Analizador import Analizador
 
 class T:
     archivo = ""
@@ -33,6 +34,7 @@ class T:
 
         self.editor.delete(1.0, END)
         self.editor.insert(INSERT, content)
+        self.editor.insert(1.0,"1)       ")
         entrada.close()
 
     def salir(self):
@@ -73,7 +75,10 @@ class T:
         self.archivoMenu.add_command(label = "Salir", command = self.salir)
 
         self.barraMenu.add_cascade(label = "Archivo", menu = self.archivoMenu)
-        self.barraMenu.add_command(label = "Ejecutar Analisis",  command = self.analizar)
+        self.barraMenu.add_separator()
+        self.barraMenu.add_command(label = "Ejecutar analisis",  command = self.analizar)
+        self.barraMenu.add_separator()
+        self.barraMenu.add_command(label = "Reportes",  command = self.salir)
         self.barraMenu.add_command(label = "Salir",  command = self.salir)
 
         frame = Frame(root, bg="lightgray")
