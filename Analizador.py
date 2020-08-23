@@ -19,7 +19,6 @@ class Analizador:
                 listaTokens.append(self.StateIdentifier(linea, columna, text, text[self.counter]))
             elif re.search(r"[0-9]", text[self.counter]): #NUMERO
                 listaTokens.append(self.StateNumber(linea, columna, text, text[self.counter]))
-                
             elif re.search(r"[\n]", text[self.counter]):#SALTO DE LINEA
                 self.counter += 1
                 linea += 1

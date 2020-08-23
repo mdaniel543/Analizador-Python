@@ -8,8 +8,9 @@ from Analizador import Analizador
 
 class T(Analizador):
     archivo = ""
-    
-
+    ti = ""
+    counter = 0
+    reservadas = ['.js','.css', '.html']
     #***********************************
     def analizar(self):
         t = self.editor.get(1.0, END)
@@ -30,7 +31,6 @@ class T(Analizador):
     
     #END
     #*********************************************
-    
 
     def nuevo(self):
         global archivo
@@ -42,12 +42,42 @@ class T(Analizador):
         archivo = filedialog.askopenfilename(title = "Abrir Archivo")
         entrada = open(archivo)
         content = entrada.read()
-
-        self.editor.delete(1.0, END)
-        self.editor.insert(INSERT, content)
-        self.editor.insert(1.0,"1)       ")
+        if self.comp(archivo) == True:
+            self.editor.delete(1.0, END)
+            self.editor.insert(INSERT, content)
+        else:
+            messagebox.showerror("Error", "Archivo ingresado incorrecto")
         entrada.close()
+#************************************************************
+    def comp(self, texto):
+        global ti
+        ti = self.tipo(texto)
+        for reservada in self.reservadas:
+            if reservada == ti:
+                return True
+        return False
 
+    def tipo(self, text):
+        global counter
+        while self.counter < len(text):
+            if re.search(r"[.]", text[self.counter]):  
+                con = self.nombre(text, text[self.counter])    
+                return con
+            else:
+              self.counter += 1  
+        return con
+        
+    def nombre(self, text, word):
+        global counter
+        self.counter += 1
+        if self.counter < len(text):
+            if re.search(r"[a-zA-Z_0-9]", text[self.counter]):
+                return self.nombre(text, word + text[self.counter])
+            else:
+                return word
+        else: 
+            return word
+#**************************************************************
     def salir(self):
         value = messagebox.askokcancel("Salir", "Está seguro que desea salir?")
         if value :
