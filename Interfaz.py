@@ -4,22 +4,34 @@ from tkinter import ttk
 from tkinter.filedialog import askopenfilename
 from tkinter import messagebox
 import re
-import Analizador import Analizador
+from Analizador import Analizador
 
-class T:
+class T(Analizador):
     archivo = ""
+    
+
+    #***********************************
     def analizar(self):
-        texto = self.editor.get("1.0",END)
-        print("analizando: "+texto)
-
-        self.printSalida()
+        t = self.editor.get(1.0, END)
+        Analizador().INICIO(t)   
+        ListaErrores = Analizador().getErrores()
+        V = "Finalizo el analisis\n\n"
+        if not ListaErrores:
+            self.consola.insert(INSERT, V)
+            messagebox.showinfo("Exito", "El analisis no tuvo errores")
+        else:
+            self.consola.insert(INSERT, V)
+            e = "Errores en:\n"
+            self.consola.insert(INSERT, e)
+            for error in ListaErrores:
+                imprimir = "Fila: " + str(error[0]) + ", Columna: " + str(error[1]) + ", Caracter: " + str(error[2]) + "\n"
+                self.consola.insert(INSERT, imprimir)
+            messagebox.showerror("Error", "El analisis termino con errores:")
+    
     #END
-    def printSalida(self):
-        texto = "Finalizo el analisis"
-        self.consola.insert(INSERT,texto)
+    #*********************************************
+    
 
-        messagebox.showerror("Error", "Texto a mostrar:\n")
-    #END
     def nuevo(self):
         global archivo
         self.editor.delete(1.0, END)#ELIMINAR EL CONTENIDO
@@ -28,7 +40,6 @@ class T:
     def abrir(self):
         global archivo
         archivo = filedialog.askopenfilename(title = "Abrir Archivo")
-
         entrada = open(archivo)
         content = entrada.read()
 
@@ -116,4 +127,5 @@ if __name__ == '__main__':
     root = Tk()
     app = T(root)
     root.mainloop()
+
 
