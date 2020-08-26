@@ -1,12 +1,13 @@
-import re
-
 class Analizador:
     linea = 0
     columna = 0
     counter = 0
     Errores = []
-    reservadas = ['if','while','do','switch','else','case', 'for', 'var']
-    signos = {"PUNTOCOMA":';', "LLAVEA":'{', "LLAVEC":'}', "PARA":'\(', "PARC":'\)', "IGUAL":'='}
+    reservadas = ['var','int', 'string', 'char', 'boolean', 'Math', 'return', 'pow','if', 'console', 'log', 'while', 'do', 'continue', 'break', 'else', 'function', 'this', 'true', 'false']
+
+
+    signos = {"PUNTOCOMA":';', "LLAVEA":'{', "LLAVEC":'}', "PARENTESIS ABRE":'(', "PARENTESIS CIERRA":')', "IGUAL":'=', "MAS": '+', "MENOS": '-', "MULTIPLICACION": '*', 
+                "MAYOR": '>', "MENOR": '<', "NEGACION": '!', "Y": '&', "O": '|', "PUNTO": '.', "COMILLA": '"', "APOS": '\'', "COMA": ',', "DOS PUNTOS": ':' }
 
     def scanner(self, text):
         global linea, columna, counter, Errores
@@ -15,15 +16,24 @@ class Analizador:
         listaTokens = []
 
         while self.counter < len(text):
-            if re.search(r"[A-Za-z]", text[self.counter]): #IDENTIFICADOR
+            if text[self.counter].isalpha() or text[self.counter].isdigit() or text[self.counter] == "_" : #IDENTIFICADOR
                 listaTokens.append(self.StateIdentifier(linea, columna, text, text[self.counter]))
-            elif re.search(r"[0-9]", text[self.counter]): #NUMERO
+            elif text[self.counter] == '\'':
+                listaTokens.append(self.Caracter(linea, columna, text, text[self.counter]))
+            elif text[self.counter] == '"':
+                listaTokens.append(self.Cadena(linea, columna, text, text[self.counter]))
+            elif text[self.counter].isdigit(): #NUMERO
                 listaTokens.append(self.StateNumber(linea, columna, text, text[self.counter]))
-            elif re.search(r"[\n]", text[self.counter]):#SALTO DE LINEA
+            elif text[self.counter] == "/": #COMENTARIO
+                listaTokens.append(self.comentario(linea, columna, text, text[self.counter]))
+            elif text[self.counter] == "\n":#SALTO DE LINEA
                 self.counter += 1
                 linea += 1
                 columna = 1 
-            elif re.search(r"[ \t]", text[self.counter]):#ESPACIOS Y TABULACIONES
+            elif text[self.counter] == "\t":#ESPACIOS Y TABULACIONES
+                self.counter += 1
+                columna += 1 
+            elif text[self.counter] == " ":#ESPACIOS Y TABULACIONES
                 self.counter += 1
                 columna += 1 
             else:
@@ -31,7 +41,7 @@ class Analizador:
                 isSign = False
                 for clave in self.signos:
                     valor = self.signos[clave]
-                    if re.search(valor, text[self.counter]):
+                    if text[self.counter] == valor:
                         listaTokens.append([linea, columna, clave, valor.replace('\\','')])
                         self.counter += 1
                         columna += 1
@@ -41,58 +51,148 @@ class Analizador:
                     self.Errores.append([linea, columna, text[self.counter]])
                     columna += 1
                     self.counter += 1
+        linea = 0
+        columna = 0
+        counter = 0    
         return listaTokens
 
     #[linea, columna, tipo, valor]
+    def comentario(self, line, column, text, word):
+        global counter, columna
+        self.counter += 1 
+        columna += 1
+        if self.counter < len(text):
+            if text[self.counter] == "/":#Comentario Unilinea
+                return self.Clinea(line, column, text, word + text[self.counter])
+            elif text[self.counter] == "*": #Comentario Multilinea
+                return self.CMlinea(line, column, text, word + text[self.counter])
+            else:
+                return [line, column, 'Barra', word]
+        else:
+            return [line, column, 'Barra', word]
+
+    def Clinea(self, line, column, text, word):
+        global counter, columna
+        self.counter += 1
+        columna += 1
+        if self.counter < len(text):
+            if text[self.counter] == "\n":
+                return [line, column, 'Comentatio Unilinea', word]
+            elif word == "// PATHW:":
+                rr = self.Ruta(line, columna, text, "")
+                return [line, column, 'Ruta', rr]
+            else:
+                return self.Clinea(line, column, text, word + text[self.counter])
+        else:
+            return [line, column, 'Comentatio Unilinea', word]
+
+    def Ruta(self, line, column, text, word):
+        global counter, columna
+        self.counter += 1
+        columna += 1
+        if self.counter < len(text):
+            if text[self.counter] == "\n":
+                return word
+            else:
+                return self.Ruta(line, column, text, word + text[self.counter])
+        else:
+            return word
+
+    def CMlinea(self, line, column, text, word):
+        global counter, columna
+        self.counter += 1
+        columna += 1
+        if self.counter < len(text):
+            if text[self.counter] == "*":
+                self.counter += 1
+                if text[self.counter] == "/":
+                    Aux = [line, column, 'Comentatio Multilinea', word + text[self.counter-1] + text[self.counter]]
+                    self.counter += 1
+                    return Aux
+                else:
+                    return self.CMlinea(line, column, text, word + text[self.counter-1] + text[self.counter])
+            elif text[self.counter] == "\n":
+                return self.CMlinea(line, column, text, word + " ")
+            else:
+                return self.CMlinea(line, column, text, word + text[self.counter])
+        else:
+            return [line, column, 'Comentatio Multilinea', word]
 
     def StateIdentifier(self, line, column, text, word):
         global counter, columna
         self.counter += 1
         columna += 1
         if self.counter < len(text):
-            if re.search(r"[a-zA-Z_0-9]", text[self.counter]):#IDENTIFICADOR
+            if text[self.counter].isalpha() or text[self.counter].isdigit() or text[self.counter] == "_":#IDENTIFICADOR
                 return self.StateIdentifier(line, column, text, word + text[self.counter])
             else:
-                return [line, column, 'identificador', word]
+                return [line, column, 'ID', word]
                 #agregar automata de identificador en el arbol, con el valor
         else:
-            return [line, column, 'identificador', word]
+            return [line, column, 'ID', word]
+
+    def Cadena(self, line, column, text, word):
+        global counter, columna
+        self.counter += 1
+        columna += 1
+        if self.counter < len(text):
+            if text[self.counter] == '"':
+                Aux = [line, column, 'String', word + text[self.counter]]
+                self.counter += 1
+                return Aux
+            else:
+                return self.Cadena(line, column, text, word + text[self.counter])
+        else:
+            return [line, column, 'String', word]
+
+    def Caracter(self, line, column, text, word):
+        global counter, columna
+        self.counter += 1
+        columna += 1
+        if self.counter < len(text):
+            if text[self.counter] == '\'':
+                Aux = [line, column, 'Char', word + text[self.counter]]
+                self.counter += 1
+                return Aux
+            else:
+                return self.Caracter(line, column, text, word + text[self.counter])
+        else:
+            return [line, column, 'Char', word]
         
     def StateNumber(self, line, column, text, word):
         global counter, columna
         self.counter += 1
         columna += 1
         if self.counter < len(text):
-            if re.search(r"[0-9]", text[self.counter]):#ENTERO
+            if text[self.counter].isdigit():#ENTERO
                 return self.StateNumber(line, column, text, word + text[self.counter])
-            elif re.search(r"\.", text[self.counter]):#DECIMAL
+            elif text[self.counter] == ".":#DECIMAL
                 return self.StateDecimal(line, column, text, word + text[self.counter])
             else:
-                return [line, column, 'integer', word]
+                return [line, column, 'Int', word]
                 #agregar automata de numero en el arbol, con el valor
         else:
-            return [line, column, 'integer', word]
+            return [line, column, 'Int', word]
 
     def StateDecimal(self, line, column, text, word):
         global counter, columna
         self.counter += 1
         columna += 1
         if self.counter < len(text):
-            if re.search(r"[0-9]", text[self.counter]):#DECIMAL
+            if text[self.counter].isdigit():#DECIMAL
                 return self.StateDecimal(line, column, text, word + text[self.counter])
             else:
-                return [line, column, 'decimal', word]
+                return [line, column, 'Decimal', word]
                 #agregar automata de decimal en el arbol, con el valor
         else:
-            return [line, column, 'decimal', word]
+            return [line, column, 'Decimal', word]
 
     def Reserved(self, TokenList):
         for token in TokenList:
-            if token[2] == 'identificador':
+            if token[2] == 'ID':
                 for reservada in self.reservadas:
-                    palabra = r"^" + reservada + "$"
-                    if re.match(palabra, token[3], re.IGNORECASE):
-                        token[2] = 'reservada'
+                    if token[3] == reservada:
+                        token[2] = 'RESERVADA: ' + '<' + token[3] +'>'
                         break
 
     def INICIO(self, texto):

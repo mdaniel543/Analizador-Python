@@ -3,23 +3,23 @@ from tkinter import *
 from tkinter import ttk
 from tkinter.filedialog import askopenfilename
 from tkinter import messagebox
-import re
+
 from Analizador import Analizador
+from AnalizadorCSS import AnalizadorCSS
 
 class T(Analizador):
     archivo = ""
     ti = ""
     counter = 0
-    reservadas = ['.js','.css', '.html']
+    reservadas = ['.js','.css', '.html','.rmt']
     #***********************************
     def analizar(self):
-        t = self.editor.get(1.0, END)
-        Analizador().INICIO(t)   
-        ListaErrores = Analizador().getErrores()
-        V = "Finalizo el analisis\n\n"
+        global ti
+        ListaErrores = self.Tanalisis()
+        V = "Finalizo el analisis de "+ ti +"\n\n"
         if not ListaErrores:
             self.consola.insert(INSERT, V)
-            messagebox.showinfo("Exito", "El analisis no tuvo errores")
+            messagebox.showinfo("Exito", "El analisis del archivo "+ ti +" no tuvo errores")
         else:
             self.consola.insert(INSERT, V)
             e = "Errores en:\n"
@@ -27,8 +27,24 @@ class T(Analizador):
             for error in ListaErrores:
                 imprimir = "Fila: " + str(error[0]) + ", Columna: " + str(error[1]) + ", Caracter: " + str(error[2]) + "\n"
                 self.consola.insert(INSERT, imprimir)
-            messagebox.showerror("Error", "El analisis termino con errores:")
-    
+            messagebox.showerror("Error", "El analisis del archovo "+ ti +" termino con errores:")
+        ListaErrores.clear()
+
+    def Tanalisis(self):
+        global ti
+        if ti == ".js":
+            t = self.editor.get(1.0, END)
+            Analizador().INICIO(t)
+            ListaR = Analizador().getErrores()
+            return ListaR
+        elif ti == ".css":
+            print("Analisis de CSS")
+        elif ti == ".html":
+            print("Analisis de HTML")
+        elif ti == ".rmt":
+            print("Analisis de Rmt")
+        else:
+            print("No ha reconocido archivo")
     #END
     #*********************************************
 
@@ -38,15 +54,17 @@ class T(Analizador):
         archivo = ""
 
     def abrir(self):
-        global archivo
+        global archivo, counter
         archivo = filedialog.askopenfilename(title = "Abrir Archivo")
         entrada = open(archivo)
         content = entrada.read()
-        if self.comp(archivo) == True:
+        nuevo = self.comp(archivo)
+        self.counter = 0
+        if nuevo:
             self.editor.delete(1.0, END)
             self.editor.insert(INSERT, content)
         else:
-            messagebox.showerror("Error", "Archivo ingresado incorrecto")
+            messagebox.showerror("Error", "Archivo ingresado desconocido")
         entrada.close()
 #************************************************************
     def comp(self, texto):
@@ -59,8 +77,9 @@ class T(Analizador):
 
     def tipo(self, text):
         global counter
+        con = ""
         while self.counter < len(text):
-            if re.search(r"[.]", text[self.counter]):  
+            if text[self.counter] == ".":  
                 con = self.nombre(text, text[self.counter])    
                 return con
             else:
@@ -71,12 +90,16 @@ class T(Analizador):
         global counter
         self.counter += 1
         if self.counter < len(text):
-            if re.search(r"[a-zA-Z_0-9]", text[self.counter]):
+            if text[self.counter].isalpha() or text[self.counter].isdigit() or text[self.counter] == "_":
                 return self.nombre(text, word + text[self.counter])
             else:
                 return word
         else: 
             return word
+#**************************************************************
+
+
+        
 #**************************************************************
     def salir(self):
         value = messagebox.askokcancel("Salir", "Está seguro que desea salir?")
@@ -94,7 +117,7 @@ class T(Analizador):
 
     def guardarComo(self):
         global archivo
-        guardar = filedialog.asksaveasfilename(title = "Guardar Archivo", initialdir = "C:/")
+        guardar = filedialog.asksaveasfilename(title = "Guardar Archivo")
         fguardar = open(guardar, "w+")
         fguardar.write(self.editor.get(1.0, END))
         fguardar.close()
@@ -153,6 +176,8 @@ class T(Analizador):
         self.consola.focus()
 
 ###################################################################################################
+
+
 if __name__ == '__main__':
     root = Tk()
     app = T(root)
