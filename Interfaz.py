@@ -6,8 +6,9 @@ from tkinter import messagebox
 
 from Analizador import Analizador
 from AnalizadorCSS import AnalizadorCSS
+from AnalizadorHTML import AnalizadorHTML
 
-class T(Analizador):
+class T(Analizador, AnalizadorCSS, AnalizadorHTML):
     archivo = ""
     ti = ""
     counter = 0
@@ -38,9 +39,15 @@ class T(Analizador):
             ListaR = Analizador().getErrores()
             return ListaR
         elif ti == ".css":
-            print("Analisis de CSS")
+            m = self.editor.get(1.0, END)
+            AnalizadorCSS().INICIO(m)
+            ListaC = AnalizadorCSS().getErrores()
+            return ListaC
         elif ti == ".html":
-            print("Analisis de HTML")
+            b = self.editor.get(1.0, END)
+            AnalizadorHTML().INICIO(b)
+            ListaH = AnalizadorHTML().getErrores()
+            return ListaH
         elif ti == ".rmt":
             print("Analisis de Rmt")
         else:

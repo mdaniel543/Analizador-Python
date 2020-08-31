@@ -1,4 +1,4 @@
-class Analizador:
+class AnalizadorHTML:
     linea = 0
     columna = 0
     counter = 0
@@ -6,8 +6,7 @@ class Analizador:
     reservadas = ['var','int', 'string', 'char', 'boolean', 'Math', 'return', 'pow','if', 'console', 'log', 'while', 'do', 'continue', 'break', 'else', 'function', 'this', 'true', 'false']
 
 
-    signos = {"PUNTOCOMA":';', "LLAVEA":'{', "LLAVEC":'}', "PARENTESIS ABRE":'(', "PARENTESIS CIERRA":')', "IGUAL":'=', "MAS": '+', "MENOS": '-', "MULTIPLICACION": '*', 
-                "MAYOR": '>', "MENOR": '<', "NEGACION": '!', "Y": '&', "O": '|', "PUNTO": '.', "COMILLA": '"', "APOS": '\'', "COMA": ',', "DOS PUNTOS": ':' }
+    signos = {"IGUAL": '=' }
 
     def scanner(self, text):
         global linea, columna, counter, Errores
@@ -211,5 +210,3 @@ class Analizador:
 
     def getErrores (self):
         return self.Errores
-
-
