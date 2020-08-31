@@ -3,7 +3,7 @@ class AnalizadorHTML:
     columna = 0
     counter = 0
     Errores = []
-    reservadas = ['var','int', 'string', 'char', 'boolean', 'Math', 'return', 'pow','if', 'console', 'log', 'while', 'do', 'continue', 'break', 'else', 'function', 'this', 'true', 'false']
+    reservadas = []
 
 
     signos = {"IGUAL": '=' }
