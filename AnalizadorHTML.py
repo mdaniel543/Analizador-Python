@@ -2,29 +2,39 @@ class AnalizadorHTML:
     linea = 0
     columna = 0
     counter = 0
+    bandera = False
     Errores = []
-    reservadas = []
+    reservadas = ['src', 'href', 'style']
+
+    Definiciones = ['<title>', '<body>', '<br>','<h1>', '<h2>', '<h3>', '<h4>', '<h5>', '<h6>', '<p>', 
+                    '<li>', '<caption>', '<th>', '<td>', '<thead>', '<tbody>', '<tfoot>']
 
 
-    signos = {"IGUAL": '=' }
+    signos = {"IGUAL": '=' , "Cierra": '>'}
 
     def scanner(self, text):
-        global linea, columna, counter, Errores
+        global linea, columna, counter, Errores, bandera
         linea = 1
         columna = 1
         listaTokens = []
 
         while self.counter < len(text):
-            if text[self.counter].isalpha() or text[self.counter].isdigit() or text[self.counter] == "_" : #IDENTIFICADOR
+            if self.bandera:
+                if text[self.counter] == "\n":
+                    self.counter += 1
+                    linea += 1
+                    columna = 1
+                    self.Supuesto(linea, columna, text, text[self.counter])
+                else:
+                    listaTokens.append(self.Contenido(linea, columna, text, text[self.counter]))
+            elif text[self.counter].isalpha(): #IDENTIFICADOR
                 listaTokens.append(self.StateIdentifier(linea, columna, text, text[self.counter]))
-            elif text[self.counter] == '\'':
-                listaTokens.append(self.Caracter(linea, columna, text, text[self.counter]))
+            elif text[self.counter] == '<':
+                listaTokens.append(self.Etiqueta(linea, columna, text, text[self.counter]))
             elif text[self.counter] == '"':
                 listaTokens.append(self.Cadena(linea, columna, text, text[self.counter]))
             elif text[self.counter].isdigit(): #NUMERO
                 listaTokens.append(self.StateNumber(linea, columna, text, text[self.counter]))
-            elif text[self.counter] == "/": #COMENTARIO
-                listaTokens.append(self.comentario(linea, columna, text, text[self.counter]))
             elif text[self.counter] == "\n":#SALTO DE LINEA
                 self.counter += 1
                 linea += 1
@@ -36,6 +46,7 @@ class AnalizadorHTML:
                 self.counter += 1
                 columna += 1 
             else:
+
                 #SIGNOS
                 isSign = False
                 for clave in self.signos:
@@ -55,20 +66,77 @@ class AnalizadorHTML:
         counter = 0    
         return listaTokens
 
-    #[linea, columna, tipo, valor]
-    def comentario(self, line, column, text, word):
-        global counter, columna
+    def Etiqueta(self, line, column, text, word):
+        global counter, columna, bandera
+        self.counter += 1
+        columna += 1
+        if self.counter < len(text):
+            if text[self.counter] == '>':
+                Aux = [line, column, 'Etiqueta Abre', word + text[self.counter]]
+                for con in self.Definiciones:
+                    if con == word + text[self.counter]:
+                        self.bandera = True
+                        break
+                self.counter += 1
+                return Aux
+            elif text[self.counter] == " ":
+                return [line, column, 'Etiqueta Abre', word]
+            elif text[self.counter] == "/":
+                return self.Etiqueta2(line, column, text, word + text[self.counter])
+            else:
+                return self.Etiqueta(line, column, text, word + text[self.counter])
+        else:
+            return [line, column, 'Etiqueta', word]
+    
+    def Etiqueta2(self, line, column, text, word):
+        global counter, columna, bandera
+        self.counter += 1
+        columna += 1
+        if self.counter < len(text):
+            if text[self.counter] == '>':
+                Aux = [line, column, 'Etiqueta Cierra', word + text[self.counter]]
+                self.counter += 1
+                self.bandera = False
+                return Aux
+            elif text[self.counter] == " ":
+                return [line, column, 'Etiqueta Cierra', word]    
+            else:
+                return self.Etiqueta2(line, column, text, word + text[self.counter])
+        else:
+            return [line, column, 'Etiqueta', word]
+    
+    def Supuesto(self, line, column, text, word):
+        global counter, columna, bandera
         self.counter += 1 
         columna += 1
         if self.counter < len(text):
-            if text[self.counter] == "/":#Comentario Unilinea
-                return self.Clinea(line, column, text, word + text[self.counter])
-            elif text[self.counter] == "*": #Comentario Multilinea
-                return self.CMlinea(line, column, text, word + text[self.counter])
+            if text[self.counter] == "<":
+                self.bandera = False
+                return
+            elif text[self.counter].isalpha() or text[self.counter].isdigit():
+                self.bandera = True
+                return 
             else:
-                return [line, column, 'Barra', word]
+                self.Supuesto(line, column, text, word + text[self.counter])
+                return
         else:
-            return [line, column, 'Barra', word]
+            return
+
+    def Contenido(self, line, column, text, word):
+        global counter, columna, bandera
+        self.counter += 1 
+        columna += 1
+        if self.counter < len(text):
+            if text[self.counter] == "<":
+                self.bandera = False
+                return [line, column, 'Contenido Visible', word]
+            elif text[self.counter] == "\n":
+                self.bandera = False
+                return self.Contenido(line, column, text, " ")
+            else:
+                return self.Contenido(line, column, text, word + text[self.counter])
+        else:
+            return [line, column, 'Contenido Visible', word]
 
     def Clinea(self, line, column, text, word):
         global counter, columna
@@ -97,36 +165,16 @@ class AnalizadorHTML:
         else:
             return word
 
-    def CMlinea(self, line, column, text, word):
-        global counter, columna
-        self.counter += 1
-        columna += 1
-        if self.counter < len(text):
-            if text[self.counter] == "*":
-                self.counter += 1
-                if text[self.counter] == "/":
-                    Aux = [line, column, 'Comentario Multilinea', word + text[self.counter-1] + text[self.counter]]
-                    self.counter += 1
-                    return Aux
-                else:
-                    return self.CMlinea(line, column, text, word + text[self.counter-1] + text[self.counter])
-            elif text[self.counter] == "\n":
-                return self.CMlinea(line, column, text, word + " ")
-            else:
-                return self.CMlinea(line, column, text, word + text[self.counter])
-        else:
-            return [line, column, 'Comentario Multilinea', word]
 
     def StateIdentifier(self, line, column, text, word):
         global counter, columna
         self.counter += 1
         columna += 1
         if self.counter < len(text):
-            if text[self.counter].isalpha() or text[self.counter].isdigit() or text[self.counter] == "_":#IDENTIFICADOR
+            if text[self.counter].isalpha() or text[self.counter].isdigit() or text[self.counter] == " ":#IDENTIFICADOR
                 return self.StateIdentifier(line, column, text, word + text[self.counter])
             else:
                 return [line, column, 'ID', word]
-                #agregar automata de identificador en el arbol, con el valor
         else:
             return [line, column, 'ID', word]
 
@@ -136,7 +184,11 @@ class AnalizadorHTML:
         columna += 1
         if self.counter < len(text):
             if text[self.counter] == '"':
-                Aux = [line, column, 'String', word + text[self.counter]]
+                Aux = [line, column, 'Cadena', word + text[self.counter]]
+                self.counter += 1
+                return Aux
+            if text[self.counter] == '\'':
+                Aux = [line, column, 'Cadena', word + text[self.counter]]
                 self.counter += 1
                 return Aux
             elif text[self.counter] == "\n":
@@ -144,23 +196,9 @@ class AnalizadorHTML:
             else:
                 return self.Cadena(line, column, text, word + text[self.counter])
         else:
-            return [line, column, 'String', word]
+            return [line, column, 'Cadena', word]
 
-    def Caracter(self, line, column, text, word):
-        global counter, columna
-        self.counter += 1
-        columna += 1
-        if self.counter < len(text):
-            if text[self.counter] == '\'':
-                Aux = [line, column, 'Char', word + text[self.counter]]
-                self.counter += 1
-                return Aux
-            elif text[self.counter] == "\n":
-                return [line, column, 'Char', word]
-            else:
-                return self.Caracter(line, column, text, word + text[self.counter])
-        else:
-            return [line, column, 'Char', word]
+    
         
     def StateNumber(self, line, column, text, word):
         global counter, columna
