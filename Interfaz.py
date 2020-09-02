@@ -7,8 +7,9 @@ from tkinter import messagebox
 from Analizador import Analizador
 from AnalizadorCSS import AnalizadorCSS
 from AnalizadorHTML import AnalizadorHTML
+from Sintactico import Sintactico
 
-class T(Analizador, AnalizadorCSS, AnalizadorHTML):
+class T(Analizador, AnalizadorCSS, AnalizadorHTML, Sintactico):
     archivo = ""
     ti = ""
     counter = 0
@@ -49,7 +50,10 @@ class T(Analizador, AnalizadorCSS, AnalizadorHTML):
             ListaH = AnalizadorHTML().getErrores()
             return ListaH
         elif ti == ".rmt":
-            print("Analisis de Rmt")
+            g = self.editor.get(1.0, END)
+            Sintactico().INICIO(g)
+            Posible = Sintactico().getErrores()
+            return Posible
         else:
             print("No ha reconocido archivo")
     #END

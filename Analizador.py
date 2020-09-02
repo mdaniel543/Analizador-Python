@@ -16,14 +16,14 @@ class Analizador:
         listaTokens = []
 
         while self.counter < len(text):
-            if text[self.counter].isalpha() or text[self.counter].isdigit() or text[self.counter] == "_" : #IDENTIFICADOR
+            if text[self.counter].isdigit(): #NUMERO
+                listaTokens.append(self.StateNumber(linea, columna, text, text[self.counter]))
+            elif text[self.counter].isalpha() or text[self.counter].isdigit() or text[self.counter] == "_" : #IDENTIFICADOR
                 listaTokens.append(self.StateIdentifier(linea, columna, text, text[self.counter]))
             elif text[self.counter] == '\'':
                 listaTokens.append(self.Caracter(linea, columna, text, text[self.counter]))
             elif text[self.counter] == '"':
                 listaTokens.append(self.Cadena(linea, columna, text, text[self.counter]))
-            elif text[self.counter].isdigit(): #NUMERO
-                listaTokens.append(self.StateNumber(linea, columna, text, text[self.counter]))
             elif text[self.counter] == "/": #COMENTARIO
                 listaTokens.append(self.comentario(linea, columna, text, text[self.counter]))
             elif text[self.counter] == "\n":#SALTO DE LINEA
@@ -170,6 +170,8 @@ class Analizador:
         if self.counter < len(text):
             if text[self.counter].isdigit():#ENTERO
                 return self.StateNumber(line, column, text, word + text[self.counter])
+            elif text[self.counter].isalpha():
+                return self.StateIdentifier(line, column, text, word + text[self.counter])
             elif text[self.counter] == ".":#DECIMAL
                 return self.StateDecimal(line, column, text, word + text[self.counter])
             else:

@@ -1,0 +1,18 @@
+GRAMATICA Analizdor .rmt
+ 
+
+S0 ->   (S0) S1   
+        [NUM] S1
+        [ID] S1 
+        EPSILON
+        
+        
+S1 ->   * S0
+        + S0
+        - S0
+        / S0
+        EPSILON
+        
+        
+        
+        
