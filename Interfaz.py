@@ -3,7 +3,7 @@ from tkinter import *
 from tkinter import ttk
 from tkinter.filedialog import askopenfilename
 from tkinter import messagebox
-
+import os
 from Analizador import Analizador
 from AnalizadorCSS import AnalizadorCSS
 from AnalizadorHTML import AnalizadorHTML
@@ -12,50 +12,82 @@ from Sintactico import Sintactico
 class T(Analizador, AnalizadorCSS, AnalizadorHTML, Sintactico):
     archivo = ""
     ti = ""
+    u = ""
+    Nombre = ""
     counter = 0
-    reservadas = ['.js','.css', '.html','.rmt']
+    reservadasa = ['.js','.css', '.html','.rmt']
     #***********************************
     def analizar(self):
-        global ti
+        global ti, u, Nombre
         ListaErrores = self.Tanalisis()
         V = "Finalizo el analisis de "+ ti +"\n\n"
+        F = "Tomamos de ruta para guardar : " + self.RUTA + "\\"+ "\n\n"
         if not ListaErrores:
             self.consola.insert(INSERT, V)
+            self.consola.insert(INSERT, F)
             messagebox.showinfo("Exito", "El analisis del archivo "+ ti +" no tuvo errores")
+            value = messagebox.askquestion("Guardar", "Desea guardar el archivo a la ruta establecida:")
+            if value :
+                if  not os.path.exists(self.RUTA):
+                    os.system("mkdir " + self.RUTA)
+                if ti == ".js":
+                    if not os.path.exists(self.rr):
+                        os.system("mkdir " + self.rr)
+                    fguardar = open(self.rr + self.Nombre + ti, "w+")
+                    fguardar.write(self.editor.get(1.0, END))
+                    fguardar.close()
+                    messagebox.showinfo("Exito", "Archivo guardado "+ self.Nombre + ti + " en ruta con exito")
+                    return
+                elif ti == ".css":
+                    if not os.path.exists(self.rrs):
+                        os.system("mkdir " + self.rrs)
+                    fguardar = open(self.rrs + self.Nombre + ti, "w+")
+                    fguardar.write(self.editor.get(1.0, END))
+                    fguardar.close()
+                    messagebox.showinfo("Exito", "Archivo guardado "+ self.Nombre + ti + " en ruta con exito")
+                    return
+                fguardar = open(self.RUTA + "\\" + self.Nombre + ti, "w+")
+                fguardar.write(self.editor.get(1.0, END))
+                fguardar.close()
+                messagebox.showinfo("Exito", "Archivo guardado "+ self.Nombre + ti + " en ruta con exito")
+
         else:
             self.consola.insert(INSERT, V)
+            self.consola.insert(INSERT, F)
             e = "Errores en:\n"
             self.consola.insert(INSERT, e)
             for error in ListaErrores:
                 imprimir = "Fila: " + str(error[0]) + ", Columna: " + str(error[1]) + ", Caracter: " + str(error[2]) + "\n"
                 self.consola.insert(INSERT, imprimir)
             messagebox.showerror("Error", "El analisis del archovo "+ ti +" termino con errores:")
+
         ListaErrores.clear()
 
     def Tanalisis(self):
         global ti
         if ti == ".js":
             t = self.editor.get(1.0, END)
-            Analizador().INICIO(t)
-            ListaR = Analizador().getErrores()
+            self.INICIO(t)
+            ListaR = self.getErrores()    
             return ListaR
         elif ti == ".css":
             m = self.editor.get(1.0, END)
-            AnalizadorCSS().INICIO(m)
-            ListaC = AnalizadorCSS().getErrores()
+            self.INICIOCSS(m)
+            ListaC = self.getErroresCSS()
             return ListaC
         elif ti == ".html":
             b = self.editor.get(1.0, END)
-            AnalizadorHTML().INICIO(b)
-            ListaH = AnalizadorHTML().getErrores()
+            self.INICIOHTML(b)
+            ListaH = self.getErroresHTML()
             return ListaH
         elif ti == ".rmt":
             g = self.editor.get(1.0, END)
-            Sintactico().INICIO(g)
-            Posible = Sintactico().getErrores()
+            self.INICIORMT(g)
+            Posible = self.getErroresRMT()
             return Posible
         else:
             print("No ha reconocido archivo")
+        
     #END
     #*********************************************
 
@@ -69,6 +101,7 @@ class T(Analizador, AnalizadorCSS, AnalizadorHTML, Sintactico):
         archivo = filedialog.askopenfilename(title = "Abrir Archivo")
         entrada = open(archivo)
         content = entrada.read()
+        self.counter = 0
         nuevo = self.comp(archivo)
         self.counter = 0
         if nuevo:
@@ -76,32 +109,42 @@ class T(Analizador, AnalizadorCSS, AnalizadorHTML, Sintactico):
             self.editor.insert(INSERT, content)
         else:
             messagebox.showerror("Error", "Archivo ingresado desconocido")
+        nuevo = False
         entrada.close()
 #************************************************************
     def comp(self, texto):
         global ti
         ti = self.tipo(texto)
-        for reservada in self.reservadas:
+        for reservada in self.reservadasa:
             if reservada == ti:
                 return True
         return False
 
     def tipo(self, text):
-        global counter
+        print(text)
+        global counter, Nombre
         con = ""
         while self.counter < len(text):
-            if text[self.counter] == ".":  
-                con = self.nombre(text, text[self.counter])    
+            if text[self.counter].isalpha() or text[self.counter].isdigit():
+                self.Nombre += text[self.counter]
+                self.counter += 1 
+            elif text[self.counter] == "/":
+                self.Nombre = ""
+                self.counter += 1 
+            elif text[self.counter] == ".": 
+                con = self.nombre(text, text[self.counter]) 
+                print(self.Nombre)   
                 return con
+                break
             else:
-              self.counter += 1  
+                self.counter += 1  
         return con
         
     def nombre(self, text, word):
         global counter
         self.counter += 1
         if self.counter < len(text):
-            if text[self.counter].isalpha() or text[self.counter].isdigit() or text[self.counter] == "_":
+            if text[self.counter].isalpha() or text[self.counter].isdigit():
                 return self.nombre(text, word + text[self.counter])
             else:
                 return word

@@ -2,25 +2,25 @@ class Sintactico:
     linea = 0
     columna = 0
     counter = 0
-    Errores = []
+    ErroresR = []
     listaTokens = []
     ErrorSintactico = False
-    Bandera = False
+    BanderaR = False
     ErroresS = []
     Index = 0
     TokenActual = ""
 
-    signos = {"Menos": '-', "Mas": '+', "Division": '/', "Multiplicacion": '*', "Parentesis Abre": '(', "Parentesis Cierra": ')'}
+    signosR = {"Menos": '-', "Mas": '+', "Division": '/', "Multiplicacion": '*', "Parentesis Abre": '(', "Parentesis Cierra": ')'}
 
-    def scanner(self, text):
+    def scannerR(self, text):
         global linea, columna, counter, Errores, bandera, listaTokens
         linea = 1
         columna = 1
         while self.counter < len(text):
             if text[self.counter].isdigit(): #NUMERO
-                self.listaTokens.append(self.StateNumber(linea, columna, text, text[self.counter]))
+                self.listaTokens.append(self.StateNumberR(linea, columna, text, text[self.counter]))
             elif text[self.counter].isalpha() or text[self.counter].isdigit(): #IDENTIFICADOR
-                self.listaTokens.append(self.StateIdentifier(linea, columna, text, text[self.counter]))
+                self.listaTokens.append(self.StateIdentifierR(linea, columna, text, text[self.counter]))
             elif text[self.counter] == "\n":#SALTO DE LINEA
                 self.listaTokens.append([linea, columna, 'TerminaLinea', '#'])
                 self.counter += 1
@@ -35,8 +35,8 @@ class Sintactico:
             else:
                 #SIGNOS
                 isSign = False
-                for clave in self.signos:
-                    valor = self.signos[clave]
+                for clave in self.signosR:
+                    valor = self.signosR[clave]
                     if text[self.counter] == valor:
                         self.listaTokens.append([linea, columna, clave, valor.replace('\\','')])
                         self.counter += 1
@@ -44,7 +44,7 @@ class Sintactico:
                         isSign = True
                         break
                 if not isSign:
-                    self.Errores.append([linea, columna, text[self.counter]])
+                    self.ErroresR.append([linea, columna, text[self.counter]])
                     columna += 1
                     self.counter += 1
         linea = 0
@@ -52,62 +52,62 @@ class Sintactico:
         counter = 0    
         return self.listaTokens
 
-    def StateIdentifier(self, line, column, text, word):
+    def StateIdentifierR(self, line, column, text, word):
         global counter, columna
         self.counter += 1
         columna += 1
         if self.counter < len(text):
             if text[self.counter].isalpha() or text[self.counter].isdigit():#IDENTIFICADOR
-                return self.StateIdentifier(line, column, text, word + text[self.counter])
+                return self.StateIdentifierR(line, column, text, word + text[self.counter])
             else:
                 return [line, column, 'ID', word]
         else:
             return [line, column, 'ID', word]
 
         
-    def StateNumber(self, line, column, text, word):
+    def StateNumberR(self, line, column, text, word):
         global counter, columna
         self.counter += 1
         columna += 1
         if self.counter < len(text):
             if text[self.counter].isdigit():#ENTERO
-                return self.StateNumber(line, column, text, word + text[self.counter])
+                return self.StateNumberR(line, column, text, word + text[self.counter])
             elif text[self.counter] == ".":#DECIMAL
-                return self.StateDecimal(line, column, text, word + text[self.counter])
+                return self.StateDecimalR(line, column, text, word + text[self.counter])
             elif text[self.counter].isalpha():
-                return self.StateIdentifier(line, column, text, word + text[self.counter])
+                return self.StateIdentifierR(line, column, text, word + text[self.counter])
             else:
                 return [line, column, 'DIGITO', word]
                 #agregar automata de numero en el arbol, con el valor
         else:
             return [line, column, 'DIGITO', word]
 
-    def StateDecimal(self, line, column, text, word):
+    def StateDecimalR(self, line, column, text, word):
         global counter, columna
         self.counter += 1
         columna += 1
         if self.counter < len(text):
             if text[self.counter].isdigit():#DECIMAL
-                return self.StateDecimal(line, column, text, word + text[self.counter])
+                return self.StateDecimalR(line, column, text, word + text[self.counter])
             else:
                 return [line, column, 'DECIMAL', word]
                 #agregar automata de decimal en el arbol, con el valor
         else:
             return [line, column, 'DECIMAL', word]
 
-    def INICIO(self, texto):
+    def INICIORMT(self, texto):
         print(texto)
         tokens = self.scanner(texto) 
         for token in tokens:
             print(token)
         print('ERRORES\n')
-        for error in self.Errores:
+        for error in self.ErroresR:
             print(error)
         self.InicioSintactico()
 
 
-    def getErrores (self):
-        return self.Errores
+    def getErroresRMT (self):
+        return self.ErroresR
 
     def verficar(self):
         global Index, TokenActual, ErrorSintactico

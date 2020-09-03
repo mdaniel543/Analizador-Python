@@ -3,16 +3,16 @@ class AnalizadorHTML:
     columna = 0
     counter = 0
     bandera = False
-    Errores = []
-    reservadas = ['src', 'href', 'style']
+    ErroresH = []
+    reservadasH = ['src', 'href', 'style']
 
     Definiciones = ['<title>', '<body>', '<br>','<h1>', '<h2>', '<h3>', '<h4>', '<h5>', '<h6>', '<p>', 
                     '<li>', '<caption>', '<th>', '<td>', '<thead>', '<tbody>', '<tfoot>']
 
 
-    signos = {"IGUAL": '=' , "Cierra": '>'}
+    signosH = {"IGUAL": '=' , "Cierra": '>'}
 
-    def scanner(self, text):
+    def scannerH(self, text):
         global linea, columna, counter, Errores, bandera
         linea = 1
         columna = 1
@@ -24,17 +24,17 @@ class AnalizadorHTML:
                     self.counter += 1
                     linea += 1
                     columna = 1
-                    self.Supuesto(linea, columna, text, text[self.counter])
+                    self.SupuestoH(linea, columna, text, text[self.counter])
                 else:
-                    listaTokens.append(self.Contenido(linea, columna, text, text[self.counter]))
+                    listaTokens.append(self.ContenidoH(linea, columna, text, text[self.counter]))
             elif text[self.counter].isalpha(): #IDENTIFICADOR
-                listaTokens.append(self.StateIdentifier(linea, columna, text, text[self.counter]))
+                listaTokens.append(self.StateIdentifierH(linea, columna, text, text[self.counter]))
             elif text[self.counter] == '<':
-                listaTokens.append(self.Etiqueta(linea, columna, text, text[self.counter]))
+                listaTokens.append(self.EtiquetaH(linea, columna, text, text[self.counter]))
             elif text[self.counter] == '"':
-                listaTokens.append(self.Cadena(linea, columna, text, text[self.counter]))
+                listaTokens.append(self.CadenaH(linea, columna, text, text[self.counter]))
             elif text[self.counter].isdigit(): #NUMERO
-                listaTokens.append(self.StateNumber(linea, columna, text, text[self.counter]))
+                listaTokens.append(self.StateNumberH(linea, columna, text, text[self.counter]))
             elif text[self.counter] == "\n":#SALTO DE LINEA
                 self.counter += 1
                 linea += 1
@@ -49,8 +49,8 @@ class AnalizadorHTML:
 
                 #SIGNOS
                 isSign = False
-                for clave in self.signos:
-                    valor = self.signos[clave]
+                for clave in self.signosH:
+                    valor = self.signosH[clave]
                     if text[self.counter] == valor:
                         listaTokens.append([linea, columna, clave, valor.replace('\\','')])
                         self.counter += 1
@@ -58,7 +58,7 @@ class AnalizadorHTML:
                         isSign = True
                         break
                 if not isSign:
-                    self.Errores.append([linea, columna, text[self.counter]])
+                    self.ErroresH.append([linea, columna, text[self.counter]])
                     columna += 1
                     self.counter += 1
         linea = 0
@@ -66,7 +66,7 @@ class AnalizadorHTML:
         counter = 0    
         return listaTokens
 
-    def Etiqueta(self, line, column, text, word):
+    def EtiquetaH(self, line, column, text, word):
         global counter, columna, bandera
         self.counter += 1
         columna += 1
@@ -82,13 +82,13 @@ class AnalizadorHTML:
             elif text[self.counter] == " ":
                 return [line, column, 'Etiqueta Abre', word]
             elif text[self.counter] == "/":
-                return self.Etiqueta2(line, column, text, word + text[self.counter])
+                return self.Etiqueta2H(line, column, text, word + text[self.counter])
             else:
-                return self.Etiqueta(line, column, text, word + text[self.counter])
+                return self.EtiquetaH(line, column, text, word + text[self.counter])
         else:
             return [line, column, 'Etiqueta', word]
     
-    def Etiqueta2(self, line, column, text, word):
+    def Etiqueta2H(self, line, column, text, word):
         global counter, columna, bandera
         self.counter += 1
         columna += 1
@@ -101,11 +101,11 @@ class AnalizadorHTML:
             elif text[self.counter] == " ":
                 return [line, column, 'Etiqueta Cierra', word]    
             else:
-                return self.Etiqueta2(line, column, text, word + text[self.counter])
+                return self.Etiqueta2H(line, column, text, word + text[self.counter])
         else:
             return [line, column, 'Etiqueta', word]
     
-    def Supuesto(self, line, column, text, word):
+    def SupuestoH(self, line, column, text, word):
         global counter, columna, bandera
         self.counter += 1 
         columna += 1
@@ -117,12 +117,12 @@ class AnalizadorHTML:
                 self.bandera = True
                 return 
             else:
-                self.Supuesto(line, column, text, word + text[self.counter])
+                self.SupuestoH(line, column, text, word + text[self.counter])
                 return
         else:
             return
 
-    def Contenido(self, line, column, text, word):
+    def ContenidoH(self, line, column, text, word):
         global counter, columna, bandera
         self.counter += 1 
         columna += 1
@@ -132,13 +132,13 @@ class AnalizadorHTML:
                 return [line, column, 'Contenido Visible', word]
             elif text[self.counter] == "\n":
                 self.bandera = False
-                return self.Contenido(line, column, text, " ")
+                return self.ContenidoH(line, column, text, " ")
             else:
-                return self.Contenido(line, column, text, word + text[self.counter])
+                return self.ContenidoH(line, column, text, word + text[self.counter])
         else:
             return [line, column, 'Contenido Visible', word]
 
-    def Clinea(self, line, column, text, word):
+    def ClineaH(self, line, column, text, word):
         global counter, columna
         self.counter += 1
         columna += 1
@@ -146,14 +146,14 @@ class AnalizadorHTML:
             if text[self.counter] == "\n":
                 return [line, column, 'Comentario Unilinea', word]
             elif word == "// PATHW:":
-                rr = self.Ruta(line, columna, text, "")
+                rr = self.RutaH(line, columna, text, "")
                 return [line, column, 'Ruta', rr]
             else:
-                return self.Clinea(line, column, text, word + text[self.counter])
+                return self.ClineaH(line, column, text, word + text[self.counter])
         else:
             return [line, column, 'Comentario Unilinea', word]
 
-    def Ruta(self, line, column, text, word):
+    def RutaH(self, line, column, text, word):
         global counter, columna
         self.counter += 1
         columna += 1
@@ -161,24 +161,24 @@ class AnalizadorHTML:
             if text[self.counter] == "\n":
                 return word
             else:
-                return self.Ruta(line, column, text, word + text[self.counter])
+                return self.RutaH(line, column, text, word + text[self.counter])
         else:
             return word
 
 
-    def StateIdentifier(self, line, column, text, word):
+    def StateIdentifierH(self, line, column, text, word):
         global counter, columna
         self.counter += 1
         columna += 1
         if self.counter < len(text):
             if text[self.counter].isalpha() or text[self.counter].isdigit() or text[self.counter] == " ":#IDENTIFICADOR
-                return self.StateIdentifier(line, column, text, word + text[self.counter])
+                return self.StateIdentifierH(line, column, text, word + text[self.counter])
             else:
                 return [line, column, 'ID', word]
         else:
             return [line, column, 'ID', word]
 
-    def Cadena(self, line, column, text, word):
+    def CadenaH(self, line, column, text, word):
         global counter, columna
         self.counter += 1
         columna += 1
@@ -194,57 +194,57 @@ class AnalizadorHTML:
             elif text[self.counter] == "\n":
                 return [line, column, 'Cadena', word]
             else:
-                return self.Cadena(line, column, text, word + text[self.counter])
+                return self.CadenaH(line, column, text, word + text[self.counter])
         else:
             return [line, column, 'Cadena', word]
 
     
         
-    def StateNumber(self, line, column, text, word):
+    def StateNumberH(self, line, column, text, word):
         global counter, columna
         self.counter += 1
         columna += 1
         if self.counter < len(text):
             if text[self.counter].isdigit():#ENTERO
-                return self.StateNumber(line, column, text, word + text[self.counter])
+                return self.StateNumberH(line, column, text, word + text[self.counter])
             elif text[self.counter] == ".":#DECIMAL
-                return self.StateDecimal(line, column, text, word + text[self.counter])
+                return self.StateDecimalH(line, column, text, word + text[self.counter])
             else:
                 return [line, column, 'Int', word]
                 #agregar automata de numero en el arbol, con el valor
         else:
             return [line, column, 'Int', word]
 
-    def StateDecimal(self, line, column, text, word):
+    def StateDecimalH(self, line, column, text, word):
         global counter, columna
         self.counter += 1
         columna += 1
         if self.counter < len(text):
             if text[self.counter].isdigit():#DECIMAL
-                return self.StateDecimal(line, column, text, word + text[self.counter])
+                return self.StateDecimalH(line, column, text, word + text[self.counter])
             else:
                 return [line, column, 'Decimal', word]
                 #agregar automata de decimal en el arbol, con el valor
         else:
             return [line, column, 'Decimal', word]
 
-    def Reserved(self, TokenList):
+    def ReservedH(self, TokenList):
         for token in TokenList:
             if token[2] == 'ID':
-                for reservada in self.reservadas:
+                for reservada in self.reservadasH:
                     if token[3] == reservada:
                         token[2] = 'RESERVADA: ' + '<' + token[3] +'>'
                         break
 
-    def INICIO(self, texto):
+    def INICIOHTML(self, texto):
         print(texto)
-        tokens = self.scanner(texto)
-        self.Reserved(tokens)
+        tokens = self.scannerH(texto)
+        self.ReservedH(tokens)
         for token in tokens:
             print(token)
         print('ERRORES\n')
-        for error in self.Errores:
+        for error in self.ErroresH:
             print(error)
 
-    def getErrores (self):
-        return self.Errores
+    def getErroresHTML (self):
+        return self.ErroresH

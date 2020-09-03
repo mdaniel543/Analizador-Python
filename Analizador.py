@@ -1,5 +1,9 @@
 class Analizador:
     linea = 0
+    prt = ""
+    pr = ""
+    RUTA = ""
+    rr = ""
     columna = 0
     counter = 0
     Errores = []
@@ -26,6 +30,8 @@ class Analizador:
                 listaTokens.append(self.Cadena(linea, columna, text, text[self.counter]))
             elif text[self.counter] == "/": #COMENTARIO
                 listaTokens.append(self.comentario(linea, columna, text, text[self.counter]))
+                self.prt = ""
+                self.pr = ""
             elif text[self.counter] == "\n":#SALTO DE LINEA
                 self.counter += 1
                 linea += 1
@@ -72,15 +78,18 @@ class Analizador:
             return [line, column, 'Barra', word]
 
     def Clinea(self, line, column, text, word):
-        global counter, columna
+        global counter, columna, pr, rr
         self.counter += 1
         columna += 1
         if self.counter < len(text):
             if text[self.counter] == "\n":
                 return [line, column, 'Comentario Unilinea', word]
-            elif word == "// PATHW:":
-                rr = self.Ruta(line, columna, text, "")
-                return [line, column, 'Ruta', rr]
+            elif text[self.counter].isalpha():
+                self.pr += text[self.counter]
+                if self.pr == 'PATHW':
+                    self.rr = self.Ruta(line, columna, text, "")
+                    return [line, column, 'Ruta', self.rr]
+                return self.Clinea(line, column, text, word + text[self.counter])            
             else:
                 return self.Clinea(line, column, text, word + text[self.counter])
         else:
@@ -91,10 +100,30 @@ class Analizador:
         self.counter += 1
         columna += 1
         if self.counter < len(text):
-            if text[self.counter] == "\n":
-                return word
+            if text[self.counter] == 'c':
+                return self.GuardarR(line, column, text, text[self.counter])
             else:
                 return self.Ruta(line, column, text, word + text[self.counter])
+        else:
+            return word
+
+    def GuardarR(self, line, column, text, word):
+        global counter, columna, RUTA, prt
+        self.counter += 1
+        columna += 1
+        if self.counter < len(text):
+            if text[self.counter] == '\n':
+                return word
+            else:
+                if text[self.counter].isalpha():
+                    self.prt += text[self.counter]
+                    print(self.prt)
+                    if self.prt == 'output':
+                        self.RUTA = word + 't'
+                        print(self.RUTA)
+                else:
+                    self.prt = ""
+                return self.GuardarR(line, column, text, word + text[self.counter])
         else:
             return word
 
@@ -110,6 +139,7 @@ class Analizador:
                     self.counter += 1
                     return Aux
                 else:
+                    self.counter -= 1
                     return self.CMlinea(line, column, text, word + text[self.counter-1] + text[self.counter])
             elif text[self.counter] == "\n":
                 return self.CMlinea(line, column, text, word + " ")
@@ -125,6 +155,7 @@ class Analizador:
         if self.counter < len(text):
             if text[self.counter].isalpha() or text[self.counter].isdigit() or text[self.counter] == "_":#IDENTIFICADOR
                 return self.StateIdentifier(line, column, text, word + text[self.counter])
+            
             else:
                 return [line, column, 'ID', word]
                 #agregar automata de identificador en el arbol, con el valor
@@ -211,7 +242,11 @@ class Analizador:
         for error in self.Errores:
             print(error)
 
+
     def getErrores (self):
         return self.Errores
 
+    def getRUTA(self):
+        print(self.RUTA)
+        return self.RUTA
 
