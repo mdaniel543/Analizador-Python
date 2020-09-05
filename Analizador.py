@@ -2,7 +2,7 @@ class Analizador:
     linea = 0
     prt = ""
     pr = ""
-    RUTA = ""
+    RUTA = "C:\\user\\output"
     rr = ""
     columna = 0
     counter = 0
@@ -241,6 +241,7 @@ class Analizador:
         print('ERRORES\n')
         for error in self.Errores:
             print(error)
+        return tokens
 
 
     def getErrores (self):

@@ -245,6 +245,7 @@ class AnalizadorHTML:
         print('ERRORES\n')
         for error in self.ErroresH:
             print(error)
+        return tokens
 
     def getErroresHTML (self):
         return self.ErroresH

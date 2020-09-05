@@ -8,26 +8,37 @@ from Analizador import Analizador
 from AnalizadorCSS import AnalizadorCSS
 from AnalizadorHTML import AnalizadorHTML
 from Sintactico import Sintactico
+from ReporteErrores import ReporteErrores
 
-class T(Analizador, AnalizadorCSS, AnalizadorHTML, Sintactico):
+class T(Analizador, AnalizadorCSS, AnalizadorHTML, Sintactico, ReporteErrores):
     archivo = ""
     ti = ""
     u = ""
     Nombre = ""
     counter = 0
+    Tokens = []
+    gt = []
     reservadasa = ['.js','.css', '.html','.rmt']
     #***********************************
     def analizar(self):
         global ti, u, Nombre
         ListaErrores = self.Tanalisis()
+        self.consola.delete(1.0, END)
         V = "Finalizo el analisis de "+ ti +"\n\n"
         F = "Tomamos de ruta para guardar : " + self.RUTA + "\\"+ "\n\n"
         if not ListaErrores:
             self.consola.insert(INSERT, V)
             self.consola.insert(INSERT, F)
+            if ti == '.css':
+                self.consola.insert(INSERT, "------BITACORA DE ESTADOS-----")
+                self.consola.insert(INSERT, "\n\n"+ self.Bitacora +"\n\n")
+                self.consola.insert(INSERT, "------REGISTRO DE TOKENS-----")
+                #for t in self.Tokens:
+                    #imprimi = "[FILA: " + str(t[0]) + ", \t COLUMNA: " + str(t[1]) + ", \t\t TOKEN: " + str(t[2]) + ", \t\t LEXEMA: " + str(t[3]) + "] \n"
+                    #self.consola.insert(INSERT, imprimi)
             messagebox.showinfo("Exito", "El analisis del archivo "+ ti +" no tuvo errores")
             value = messagebox.askquestion("Guardar", "Desea guardar el archivo a la ruta establecida:")
-            if value :
+            if value == "yes":
                 if  not os.path.exists(self.RUTA):
                     os.system("mkdir " + self.RUTA)
                 if ti == ".js":
@@ -46,11 +57,13 @@ class T(Analizador, AnalizadorCSS, AnalizadorHTML, Sintactico):
                     fguardar.close()
                     messagebox.showinfo("Exito", "Archivo guardado "+ self.Nombre + ti + " en ruta con exito")
                     return
+                elif ti == ".rmt":
+                    self.SintacticoHTML(self.gt, self.Nombre, self.RUTA)
+                    self.gt.clear()
                 fguardar = open(self.RUTA + "\\" + self.Nombre + ti, "w+")
                 fguardar.write(self.editor.get(1.0, END))
                 fguardar.close()
                 messagebox.showinfo("Exito", "Archivo guardado "+ self.Nombre + ti + " en ruta con exito")
-
         else:
             self.consola.insert(INSERT, V)
             self.consola.insert(INSERT, F)
@@ -60,30 +73,35 @@ class T(Analizador, AnalizadorCSS, AnalizadorHTML, Sintactico):
                 imprimir = "Fila: " + str(error[0]) + ", Columna: " + str(error[1]) + ", Caracter: " + str(error[2]) + "\n"
                 self.consola.insert(INSERT, imprimir)
             messagebox.showerror("Error", "El analisis del archovo "+ ti +" termino con errores:")
-
+            val = messagebox.askquestion("Report", "Generar Reporte de errores:")
+            if val == "yes":
+                print(val)
+                self.realizarHTML(ListaErrores, self.Nombre, self.RUTA)
+                messagebox.showinfo("Exito", "Reporte de errores guardado "+ self.Nombre + ti + " en ruta con exito")
         ListaErrores.clear()
 
     def Tanalisis(self):
         global ti
         if ti == ".js":
             t = self.editor.get(1.0, END)
-            self.INICIO(t)
+            self.Tokens =  self.INICIO(t)
             ListaR = self.getErrores()    
             return ListaR
         elif ti == ".css":
             m = self.editor.get(1.0, END)
-            self.INICIOCSS(m)
+            self.Tokens = self.INICIOCSS(m)
             ListaC = self.getErroresCSS()
             return ListaC
         elif ti == ".html":
             b = self.editor.get(1.0, END)
-            self.INICIOHTML(b)
+            self.Tokens = self.INICIOHTML(b)
             ListaH = self.getErroresHTML()
             return ListaH
         elif ti == ".rmt":
             g = self.editor.get(1.0, END)
             self.INICIORMT(g)
             Posible = self.getErroresRMT()
+            self.gt = self.RrS
             return Posible
         else:
             print("No ha reconocido archivo")
@@ -107,6 +125,8 @@ class T(Analizador, AnalizadorCSS, AnalizadorHTML, Sintactico):
         if nuevo:
             self.editor.delete(1.0, END)
             self.editor.insert(INSERT, content)
+            self.editor.tag_add("if", "1.0", "1.0")
+            self.editor.tag_config("if", foreground="yellow")
         else:
             messagebox.showerror("Error", "Archivo ingresado desconocido")
         nuevo = False
@@ -216,6 +236,7 @@ class T(Analizador, AnalizadorCSS, AnalizadorHTML, Sintactico):
         Label(scroll,text='Consola', font = ("Arial", 14), background='lightgray', foreground = "black").grid(row=1,column=2)
 
         self.editor = scrolledtext.ScrolledText(scroll, undo = True, width = 80, height = 30, font = ("Arial", 10), background = 'lightblue',  foreground = "black")
+        #self.editor.highlight_pattern("if", "red")
 
         self.editor.grid(row = 2, column = 0)
 

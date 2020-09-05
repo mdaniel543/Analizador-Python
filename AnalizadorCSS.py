@@ -6,6 +6,8 @@ class AnalizadorCSS:
     columna = 0
     rrs = ""
     counter = 0
+    Bitacora = ""
+    banderaB = True
     ErroresC = []
     reservadasC = ['color', 'border', 'text-align', 'font-weight','padding-left', 'padding-top', 'line-height', 'margin-top', 'margin-left','display', 'top', 'float', 'min-width',
                     'background-color', 'Opacity', 'font-family', 'font-size', 'padding-right', 'padding', 'width', 'margin-right', 'margin', 'position', 'right', 'clear', 'max-height',
@@ -23,16 +25,52 @@ class AnalizadorCSS:
 
         while self.counter < len(text):
             if text[self.counter].isalpha(): #IDENTIFICADOR
+                if self.banderaB == True:
+                    self.Bitacora += "[ID] --> "
+                    self.banderaB = False
+                else:
+                    self.Bitacora += "[ID] \n"
+                    self.banderaB = True
                 listaTokens.append(self.StateIdentifierC(linea, columna, text, text[self.counter]))            
             elif text[self.counter] == '"':
+                if self.banderaB == True:
+                    self.Bitacora += "[Cadena] --> "
+                    self.banderaB = False
+                else:
+                    self.Bitacora += "[Cadena] \n"
+                    self.banderaB = True
                 listaTokens.append(self.CadenaC(linea, columna, text, text[self.counter]))
             elif text[self.counter] == "-":
+                if self.banderaB == True:
+                    self.Bitacora += "[NUMERO] --> "
+                    self.banderaB = False
+                else:
+                    self.Bitacora += "[NUMERO] \n"
+                    self.banderaB = True
                 listaTokens.append(self.StateNumberNC(linea, columna, text, text[self.counter]))
             elif text[self.counter].isdigit(): #NUMERO
+                if self.banderaB == True:
+                    self.Bitacora += "[NUMERO] --> "
+                    self.banderaB = False
+                else:
+                    self.Bitacora += "[NUMERO] \n"
+                    self.banderaB = True
                 listaTokens.append(self.StateNumberC(linea, columna, text, text[self.counter]))
             elif text[self.counter] == "/": #COMENTARIO
+                if self.banderaB == True:
+                    self.Bitacora += "[Comentario] --> "
+                    self.banderaB = False
+                else:
+                    self.Bitacora += "[Comentario] \n"
+                    self.banderaB = True
                 listaTokens.append(self.comentarioC(linea, columna, text, text[self.counter]))
             elif text[self.counter] == '#': #Codigo
+                if self.banderaB == True:
+                    self.Bitacora += "[Codigo] --> "
+                    self.banderaB = False
+                else:
+                    self.Bitacora += "[Codigo] \n"
+                    self.banderaB = True
                 listaTokens.append(self.codigoC(linea, columna, text, text[self.counter]))
             elif text[self.counter] == "\n":#SALTO DE LINEA
                 self.counter += 1
@@ -50,6 +88,12 @@ class AnalizadorCSS:
                 for clave in self.signosC:
                     valor = self.signosC[clave]
                     if text[self.counter] == valor:
+                        if self.banderaB == True:
+                            self.Bitacora += "[SIGNO] --> "
+                            self.banderaB = False
+                        else:
+                            self.Bitacora += "[SIGNO] \n"
+                            self.banderaB = True
                         listaTokens.append([linea, columna, clave, valor.replace('\\','')])
                         self.counter += 1
                         columna += 1
@@ -361,6 +405,7 @@ class AnalizadorCSS:
         print('ERRORES\n')
         for error in self.ErroresC:
             print(error)
+        return tokens
 
     def getErroresCSS(self):
         return self.ErroresC
