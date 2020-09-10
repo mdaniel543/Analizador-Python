@@ -117,7 +117,6 @@ class Analizador:
             else:
                 if text[self.counter].isalpha():
                     self.prt += text[self.counter]
-                    print(self.prt)
                     if self.prt == 'output':
                         self.RUTA = word + 't'
                         print(self.RUTA)
@@ -229,7 +228,7 @@ class Analizador:
             if token[2] == 'ID':
                 for reservada in self.reservadas:
                     if token[3] == reservada:
-                        token[2] = 'RESERVADA: ' + '<' + token[3] +'>'
+                        token[2] = 'RESERVADA' 
                         break
 
     def INICIO(self, texto):
@@ -242,6 +241,7 @@ class Analizador:
         for error in self.Errores:
             print(error)
         return tokens
+
 
 
     def getErrores (self):

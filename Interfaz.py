@@ -4,13 +4,15 @@ from tkinter import ttk
 from tkinter.filedialog import askopenfilename
 from tkinter import messagebox
 import os
+
 from Analizador import Analizador
 from AnalizadorCSS import AnalizadorCSS
 from AnalizadorHTML import AnalizadorHTML
 from Sintactico import Sintactico
 from ReporteErrores import ReporteErrores
+from graph import graph
 
-class T(Analizador, AnalizadorCSS, AnalizadorHTML, Sintactico, ReporteErrores):
+class T(Analizador, AnalizadorCSS, AnalizadorHTML, Sintactico, ReporteErrores, graph):
     archivo = ""
     ti = ""
     u = ""
@@ -21,6 +23,7 @@ class T(Analizador, AnalizadorCSS, AnalizadorHTML, Sintactico, ReporteErrores):
     reservadasa = ['.js','.css', '.html','.rmt']
     #***********************************
     def analizar(self):
+        
         global ti, u, Nombre
         ListaErrores = self.Tanalisis()
         self.consola.delete(1.0, END)
@@ -29,6 +32,9 @@ class T(Analizador, AnalizadorCSS, AnalizadorHTML, Sintactico, ReporteErrores):
         if not ListaErrores:
             self.consola.insert(INSERT, V)
             self.consola.insert(INSERT, F)
+            if ti == ".js":
+                self.inicioG(self.Tokens, self.RUTA )
+                messagebox.showinfo("REPORTE", "El reporte de "+ ti +" fue creado en la ruta establecida")
             if ti == '.css':
                 self.consola.insert(INSERT, "------BITACORA DE ESTADOS-----")
                 self.consola.insert(INSERT, "\n\n"+ self.Bitacora +"\n\n")
@@ -57,13 +63,21 @@ class T(Analizador, AnalizadorCSS, AnalizadorHTML, Sintactico, ReporteErrores):
                     fguardar.close()
                     messagebox.showinfo("Exito", "Archivo guardado "+ self.Nombre + ti + " en ruta con exito")
                     return
+                elif ti == ".html":
+                    if not os.path.exists(self.rrv):
+                        os.system("mkdir " + self.rrv)
+                    fguardar = open(self.rrv + self.Nombre + ti, "w+")
+                    fguardar.write(self.editor.get(1.0, END))
+                    fguardar.close()
+                    messagebox.showinfo("Exito", "Archivo guardado "+ self.Nombre + ti + " en ruta con exito")
+                    return
                 elif ti == ".rmt":
                     self.SintacticoHTML(self.gt, self.Nombre, self.RUTA)
                     self.gt.clear()
-                fguardar = open(self.RUTA + "\\" + self.Nombre + ti, "w+")
-                fguardar.write(self.editor.get(1.0, END))
-                fguardar.close()
-                messagebox.showinfo("Exito", "Archivo guardado "+ self.Nombre + ti + " en ruta con exito")
+                    fguardar = open(self.RUTA + "\\" + self.Nombre + ti, "w+")
+                    fguardar.write(self.editor.get(1.0, END))
+                    fguardar.close()
+                    messagebox.showinfo("Exito", "Archivo guardado "+ self.Nombre + ti + " en ruta con exito")
         else:
             self.consola.insert(INSERT, V)
             self.consola.insert(INSERT, F)
@@ -72,7 +86,7 @@ class T(Analizador, AnalizadorCSS, AnalizadorHTML, Sintactico, ReporteErrores):
             for error in ListaErrores:
                 imprimir = "Fila: " + str(error[0]) + ", Columna: " + str(error[1]) + ", Caracter: " + str(error[2]) + "\n"
                 self.consola.insert(INSERT, imprimir)
-            messagebox.showerror("Error", "El analisis del archovo "+ ti +" termino con errores:")
+            messagebox.showerror("Error", "El analisis del archivo "+ ti +" termino con errores:")
             val = messagebox.askquestion("Report", "Generar Reporte de errores:")
             if val == "yes":
                 print(val)
@@ -82,6 +96,7 @@ class T(Analizador, AnalizadorCSS, AnalizadorHTML, Sintactico, ReporteErrores):
 
     def Tanalisis(self):
         global ti
+        self.counter = 0
         if ti == ".js":
             t = self.editor.get(1.0, END)
             self.Tokens =  self.INICIO(t)
@@ -125,8 +140,6 @@ class T(Analizador, AnalizadorCSS, AnalizadorHTML, Sintactico, ReporteErrores):
         if nuevo:
             self.editor.delete(1.0, END)
             self.editor.insert(INSERT, content)
-            self.editor.tag_add("if", "1.0", "1.0")
-            self.editor.tag_config("if", foreground="yellow")
         else:
             messagebox.showerror("Error", "Archivo ingresado desconocido")
         nuevo = False

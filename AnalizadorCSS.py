@@ -152,7 +152,7 @@ class AnalizadorCSS:
         self.counter += 1
         columna += 1
         if self.counter < len(text):
-            if text[self.counter] == 'c':
+            if text[self.counter].isalpha():
                 return self.GuardarRC(line, column, text, text[self.counter])
             else:
                 return self.RutaC(line, column, text, word + text[self.counter])
@@ -164,7 +164,7 @@ class AnalizadorCSS:
         self.counter += 1
         columna += 1
         if self.counter < len(text):
-            if text[self.counter] == '\n':
+            if text[self.counter] == '*':
                 return word
             else:
                 return self.GuardarRC(line, column, text, word + text[self.counter])
@@ -190,6 +190,8 @@ class AnalizadorCSS:
                 self.prs += text[self.counter]
                 if self.prs == 'PATHW':
                     self.rrs = self.RutaC(line, columna, text, "")
+                    self.counter += 1
+                    self.counter += 1
                     return [line, column, 'Ruta', self.rrs]
                 return self.CMlineaC(line, column, text, word + text[self.counter])
             else:

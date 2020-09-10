@@ -2,8 +2,10 @@ class AnalizadorHTML:
     linea = 0
     columna = 0
     counter = 0
+    prvs = ""
     bandera = False
     ErroresH = []
+    rrv = ""
     reservadasH = ['src', 'href', 'style']
 
     Definiciones = ['<title>', '<body>', '<br>','<h1>', '<h2>', '<h3>', '<h4>', '<h5>', '<h6>', '<p>', 
@@ -81,6 +83,8 @@ class AnalizadorHTML:
                 return Aux
             elif text[self.counter] == " ":
                 return [line, column, 'Etiqueta Abre', word]
+            elif text[self.counter] == "!":
+                return self.CMlineaH(line, column, text, word + text[self.counter])
             elif text[self.counter] == "/":
                 return self.Etiqueta2H(line, column, text, word + text[self.counter])
             else:
@@ -138,33 +142,51 @@ class AnalizadorHTML:
         else:
             return [line, column, 'Contenido Visible', word]
 
-    def ClineaH(self, line, column, text, word):
-        global counter, columna
+
+    def CMlineaH(self, line, column, text, word):
+        global counter, columna, pr, rr
         self.counter += 1
         columna += 1
         if self.counter < len(text):
-            if text[self.counter] == "\n":
-                return [line, column, 'Comentario Unilinea', word]
-            elif word == "// PATHW:":
-                rr = self.RutaH(line, columna, text, "")
-                return [line, column, 'Ruta', rr]
+            if text[self.counter] == ">":
+                return [line, column, 'Comentario', word]
+            elif text[self.counter].isalpha():
+                self.prvs += text[self.counter]
+                if self.prvs == 'PATHW':
+                    self.rrv = self.RutaH(line, columna, text, "")
+                    self.counter += 1
+                    return [line, column, 'Ruta', self.rrv]
+                return self.CMlineaH(line, column, text, word + text[self.counter])            
             else:
-                return self.ClineaH(line, column, text, word + text[self.counter])
+                return self.CMlineaH(line, column, text, word + text[self.counter])
         else:
-            return [line, column, 'Comentario Unilinea', word]
+            return [line, column, 'Comentario', word]
 
     def RutaH(self, line, column, text, word):
         global counter, columna
         self.counter += 1
         columna += 1
         if self.counter < len(text):
-            if text[self.counter] == "\n":
-                return word
+            if text[self.counter].isalpha():
+                return self.GuardarRH(line, column, text, text[self.counter])
             else:
                 return self.RutaH(line, column, text, word + text[self.counter])
         else:
             return word
 
+    def GuardarRH(self, line, column, text, word):
+        global counter, columna, RUTA, prt
+        self.counter += 1
+        columna += 1
+        if self.counter < len(text):
+            if text[self.counter] == ">":
+                return word
+            elif text[self.counter] == '-':
+                return self.GuardarRH(line, column, text, word)
+            else:
+                return self.GuardarRH(line, column, text, word + text[self.counter])
+        else:
+            return word
 
     def StateIdentifierH(self, line, column, text, word):
         global counter, columna
