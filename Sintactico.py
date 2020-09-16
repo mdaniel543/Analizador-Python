@@ -104,6 +104,12 @@ class Sintactico:
 
     def INICIORMT(self, texto):
         print(texto)
+        self.TokenActual = ""
+        self.RrS.clear()
+        self.cons = ""
+        self.temp = -1
+        self.ciclo = 0
+        self.aux = "Correcto"
         self.ErroresS.clear()
         self.listaTokensa.clear()
         self.RrS.clear()
@@ -123,23 +129,26 @@ class Sintactico:
 
     def verficar(self):
         global Index, TokenActual, ErrorSintactico
-        if self.TokenActual == 'TerminaLinea':
-            print('Exito')
-        elif self.TokenActual == 'Parentesis Cierra': 
-            self.Parea('Aceptacion')
-            
+        if self.ErrorSintactico == True:
+            self.Parea('TerminaLinea') 
+            self.verficar()   
 
     def InicioSintactico(self):
         global Index, TokenActual, ErrorSintactico, listaTokensa
         self.Index = 0
         self.TokenActual = self.listaTokensa[self.Index][2]
         self.cons += self.listaTokensa[self.Index][3]
-        i = -1
+        i = 0
         while i < self.ciclo:
+            print('Holas')
             i += 1
             self.S0()
+            self.Parea('TerminaLinea')
             self.verficar()
-        
+            self.RrS.append([self.cons, self.aux])
+            self.cons = ""
+            self.aux = "Correcto"
+            self.temp +=1
         print("Se concluyo analisis sintactico")
 
 
@@ -156,7 +165,6 @@ class Sintactico:
             self.S1()
         elif self.TokenActual == 'Parentesis Abre':
             self.Parea('Parentesis Abre')
-            #self.Bandera = True
             self.S0()
             self.Parea('Parentesis Cierra')
             self.S1()
@@ -178,65 +186,61 @@ class Sintactico:
         elif self.TokenActual == 'Division':
             self.Parea('Division')
             self.S0()
-        elif self.TokenActual == 'TerminaLinea':
-            self.Parea('TerminaLinea')
         else:
+            #Epsilon
             pass
 
 
     def Parea(self, token):
         global Index, TokenActual, ErrorSintactico, ErroresS, listaTokensa, Bandera, cons
         if(self.ErrorSintactico):
-            if(self.Index < len(self.listaTokensa)):
+            if(self.Index < len(self.listaTokensa) -1):
+                print(self.Index)
+                print(len(self.listaTokensa))
+                if self.TokenActual == 'TerminaLinea':
+                    self.ErrorSintactico = False
+                    self.Index += 1
+                    self.TokenActual = self.listaTokensa[self.Index][2]
+                    return
                 self.Index += 1
                 self.TokenActual = self.listaTokensa[self.Index][2]
                 self.cons += self.listaTokensa[self.Index][3]
-                if self.TokenActual == 'TerminaLinea':
-                    self.ErrorSintactico = False
-                    self.RrS.append([self.cons, "Incorrecto"])
-                    self.cons = ""
-                    self.aux = "Correcto"
-                    self.temp += 1
-                    print("HOLA")
-                    self.Parea('TerminaLinea')
+            else:
+                self.ErrorSintactico = False
         else:
-            if (self.Index <= len(self.listaTokensa) -1):
+            if (self.Index < len(self.listaTokensa)):
                 if self.TokenActual == token:
                     if self.Index == len(self.listaTokensa)-1:
-                        self.Index += 1
-                    elif self.Index > len(self.listaTokensa)-1:
+                        self.cons += self.listaTokensa[self.Index][3]
                         self.Index += 1
                     else:
+                        #if self.TokenActual == 'TerminaLinea':
+                            #print("")
+                        #else:
+                        self.cons += self.listaTokensa[self.Index][3]
                         self.Index += 1
                         self.TokenActual = self.listaTokensa[self.Index][2]
-                        self.cons += self.listaTokensa[self.Index][3]
-                        if self.TokenActual == 'TerminaLinea':
-                            self.RrS.append([self.cons, self.aux])
-                            self.cons = ""
-                            self.aux = "Correcto"
-                            self.temp +=1
+                        
                 else: 
                     self.ErroresS.append(['>> Error sintactico', token, self.listaTokensa[self.Index][2], self.listaTokensa[self.Index][3]])
                     print ('>> Error sintactico se esperaba [' + token + '] en lugar de [' +  self.listaTokensa[self.Index][2] + 
                             '] con valor de \"' + self.listaTokensa[self.Index][3] + '\"' + 'en la linea ' + str(self.listaTokensa[self.Index][0]))
                     self.ErrorSintactico = True
                     self.aux = "Incorrecto"
-                    if 'TerminaLinea' == self.listaTokensa[self.Index-1][2]:
-                        self.RrS[self.temp-1][1] = self.aux
-                        self.ErrorSintactico = False
-            else:        
+                    self.cons += self.listaTokensa[self.Index][3]
+                    #if 'TerminaLinea' == self.listaTokensa[self.Index-1][2]:
+                        #self.RrS[self.temp-1][1] = self.aux
+                        #self.ErrorSintactico = False
+            else:
+                print(self.Index)
+                print(len(self.listaTokensa))        
                 print ('>> Error sintactico se esperaba [' + token + ']' )
                 self.ErroresS.append(['>> Error sintactico', token, "", ""])
                 self.ErrorSintactico = True
+                self.cons += self.listaTokensa[self.Index][3]
                 self.aux = "Incorrecto"
-                self.RrS[self.temp][1] = self.aux
+                #self.RrS[self.temp][1] = self.aux
         
 
     def getErroresS(self):
         return self.ErroresS
-
-
-
-                
-
-

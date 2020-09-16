@@ -96,6 +96,8 @@ class T(Analizador, AnalizadorCSS, AnalizadorHTML, Sintactico, ReporteErrores, g
 
     def Tanalisis(self):
         global ti
+        self.linea = 0
+        self.columna = 0
         self.counter = 0
         if ti == ".js":
             t = self.editor.get(1.0, END)
@@ -229,7 +231,7 @@ class T(Analizador, AnalizadorCSS, AnalizadorHTML, Sintactico, ReporteErrores, g
         self.barraMenu.add_separator()
         self.barraMenu.add_command(label = "Ejecutar analisis",  command = self.analizar)
         self.barraMenu.add_separator()
-        self.barraMenu.add_command(label = "Reportes",  command = self.salir)
+        #self.barraMenu.add_command(label = "Reportes",  command = self.salir)
         self.barraMenu.add_command(label = "Salir",  command = self.salir)
 
         frame = Frame(root, bg="lightgray")
